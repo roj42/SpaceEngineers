@@ -9,9 +9,10 @@ namespace SpaceEngineers
     public class UpdatePanelWithTotals : Skeleton
 
     {
+
         //Assumes monospace font size 1
         const int COLUMN_WIDTH = 16;
-        const string PANEL_NAME = "Status Panel";
+        const string PANEL_NAME = "Ore Panel";
         const float ICE_THRESHOLD = 42000.0f;
         void Main(string argument)
         {
@@ -37,7 +38,7 @@ namespace SpaceEngineers
             {
                 for (int i = 0; i < l1.Count; i++)
                 {
-                    if (l1[i].CustomName == PANEL_NAME)
+                    if (l1[i].CustomName.Contains(PANEL_NAME))
                     {
                         v1 = (IMyTextPanel)l1[i];
                         ((IMyTextPanel)v1).FontColor = new Color(255, 255, 255);
@@ -124,7 +125,7 @@ namespace SpaceEngineers
             }
             foreach (KeyValuePair<string, float> kvp in resourcesDict)
             {
-                string valueOut = kvp.Value < 5000 ? (float)(Math.Round((double)kvp.Value, 0)) + " " : (float)(Math.Round((double)kvp.Value / 1000, 1)) + "k";
+                string valueOut = kvp.Value < 5000 ? (float)(Math.Round((double)kvp.Value, 0)) + " " : (float)(Math.Round((double)kvp.Value / 1000, 0)) + "k";
                 if (kvp.Key.Equals("Ice"))
                 {
                     if (kvp.Value < ICE_THRESHOLD) ((IMyTextPanel)v1).FontColor = new Color(255, 0, 0);
@@ -290,5 +291,6 @@ namespace SpaceEngineers
 
             else { return SubtypeId; }
         }
+
     }
 }

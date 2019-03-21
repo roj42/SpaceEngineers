@@ -13,17 +13,31 @@ namespace SpaceEngineers
         const string ENGINE_PANEL_NAME = "LCD Panel Engines";
         const string BATTERY_PANEL_NAME = "LCD Panel Batteries";
 
-        const string ORE_PANEL_NAME = "LCD Panel Ore";
+        const string INV_PANEL_NAME = "LCD Panel Inv";
         const float ICE_THRESHOLD = 50000.0f;
         //Assumes monospace font size 1
         const int COLUMN_WIDTH = 16;
 
+        const IDictionary<string, float> resourcesDict = new Dictionary<string, float>() {
+        //Show ice
+            {"Ice", 0.0f},
+            //Show ingots
+            { "Iron Ingot", 0.0f },
+            { "Nickel Ingot", 0.0f },
+            {"Silicon Wafer", 0.0f },
+            {"Cobalt Ingot", 0.0f },
+            {"Silver Ingot", 0.0f },
+            {"Gold Ingot", 0.0f },
+            {"Platinum Ingot", 0.0f },
+            {"Uranium Ingot", 0.0f },
+            {"Magnesium Pow", 0.0f }
+        };
 
         void Main()
         {
             string ERR_TXT = "";
 
-            IMyTextPanel orePanel = null;
+            IMyTextPanel invPanel = null;
             IMyTextPanel tankPanel = null;
             IMyTextPanel enginePanel = null;
             IMyTextPanel batteryPanel = null;
@@ -40,11 +54,11 @@ namespace SpaceEngineers
                 {
                     switch (lcdPanelsOnGrid[i].CustomName)
                     {
-                        case ORE_PANEL_NAME:
-                            orePanel = (IMyTextPanel)lcdPanelsOnGrid[i];
+                        case INV_PANEL_NAME:
+                            invPanel = (IMyTextPanel)lcdPanelsOnGrid[i];
                             //Reset color for ice alarm
-                            ((IMyTextPanel)orePanel).FontColor = new Color(255, 255, 255);
-                            Log("clear", orePanel);
+                            ((IMyTextPanel)invPanel).FontColor = new Color(255, 255, 255);
+                            Log("clear", invPanel);
                             continue;
                         case TANK_PANEL_NAME:
                             tankPanel = (IMyTextPanel)lcdPanelsOnGrid[i];
@@ -62,9 +76,9 @@ namespace SpaceEngineers
                             continue;
                     }
                 }
-                if (orePanel == null && ORE_PANEL_NAME.Length > 0)
+                if (invPanel == null && INV_PANEL_NAME.Length > 0)
                 {
-                    ERR_TXT += "no LCD Panel block named " + ORE_PANEL_NAME + " found\n";
+                    ERR_TXT += "no LCD Panel block named " + INV_PANEL_NAME + " found\n";
                 }
 
                 if (tankPanel == null && TANK_PANEL_NAME.Length > 0)
@@ -82,7 +96,7 @@ namespace SpaceEngineers
             }
 
             //get all containers with inventories
-            if (ORE_PANEL_NAME.Length > 0)
+            if (INV_PANEL_NAME.Length > 0)
             {
                 List<IMyTerminalBlock> inventoryBlocksOnGrid = new List<IMyTerminalBlock>();
                 GridTerminalSystem.GetBlocksOfType<IMyTerminalBlock>(inventoryBlocksOnGrid, filterInventories);
@@ -100,6 +114,26 @@ namespace SpaceEngineers
                         inventories.Add(inventoryBlocksOnGrid[i].GetInventory(1));
                     }
                 }
+                Echo(inventories.Count + " inventories with items in them");
+                //Count items that appear in dictionary and update
+                for (int i = 0; i < inventories.Count; i++)
+                {
+                    List<MyInventoryItem> items = new List<MyInventoryItem>();
+                    inventories[i].GetItems(items, filterItemsForOreAndIngots);
+                    for (int j = 0; j < items.Count; j++)
+                    {
+                        String itemName = decodeItemName(items[j]);
+                        float currentCount = getItemAmountAsFloat(items[j]);
+                        float prevCount = 0.0f;
+                        if (resourcesDict.TryGetValue(itemName, out prevCount))
+                        {
+                            currentCount += prevCount;
+                            resourcesDict[itemName] = currentCount;
+
+                        }
+                    }
+                }
+
             }
 
             //get all tanks
@@ -112,28 +146,45 @@ namespace SpaceEngineers
                 {
                     ERR_TXT += "no gas tank blocks found\n";
                 }
+                Echo(tanksOnGrid.Count + " tanks found");
+                tanksOnGrid.Sort(compareBlocksByCustomName);
             }
 
             //Get all batteries
-            if(BATTERY_PANEL_NAME.Length > 0)
-            List<IMyTerminalBlock> batteriesOnGrid = new List<IMyTerminalBlock>();
-            GridTerminalSystem.GetBlocksOfType<IMyBatteryBlock>(batteriesOnGrid, filterThis);
-            if (batteriesOnGrid.Count == 0)
+            if (BATTERY_PANEL_NAME.Length > 0)
             {
-                ERR_TXT += "no battery blocks found\n";
+                List<IMyTerminalBlock> batteriesOnGrid = new List<IMyTerminalBlock>();
+                GridTerminalSystem.GetBlocksOfType<IMyBatteryBlock>(batteriesOnGrid, filterThis);
+                if (batteriesOnGrid.Count == 0)
+                {
+                    ERR_TXT += "no battery blocks found\n";
+                }
+
+                // display errors
+                if (ERR_TXT != "")
+                {
+                    Echo("Script Errors:\n" + ERR_TXT + "(make sure block ownership is set correctly)");
+                    if (invPanel == null && tankPanel == null && enginePanel == null && batteryPanel == null)
+                    {
+                        return;
+                    }
+                }
             }
 
-            // display errors
-            if (ERR_TXT != "")
+            //display tanks
+            float percent = 0.0f;
+            string outputText = "";
+            // logic for tanks
+            for (int i = 0; i < tanksOnGrid.Count; i++)
             {
-                Echo("Script Errors:\n" + ERR_TXT + "(make sure block ownership is set correctly)");
-                return;
+                percent = getExtraFieldFloat(tanksOnGrid[i], "Filled: (\\d+\\.?\\d*)%");
+                string nameOut = tanksOnGrid[i].CustomName;
+                Log("\n" + PadRight(nameOut + ": ", COLUMN_WIDTH) + percent + "%", tankPanel);
             }
 
-
-            //Batteries!
+            //display batteries
             string header = PadRight("Name", COLUMN_WIDTH) + PadRight("Charge", COLUMN_WIDTH) + "Status";
-            Log(header,batteryPanel);
+            Log(header, batteryPanel);
 
             for (int i = 0; i < batteriesOnGrid.Count; i++)
             {
@@ -159,11 +210,25 @@ namespace SpaceEngineers
                         statustext += "Discharging";
                     }
 
-                    Log(statustext,batteryPanel);
+                    Log(statustext, batteryPanel);
                 }
             }
 
-        //END OF MAIN
+            //display inventories
+            foreach (KeyValuePair<string, float> kvp in resourcesDict)
+            {
+                //if there is more than 5000, reduce to kilo-count
+                string valueOut = kvp.Value < 5000 ? (float)(Math.Round((double)kvp.Value, 0)) + " " : (float)(Math.Round((double)kvp.Value / 1000, 1)) + "k";
+                //Turn panel red for ice threshold
+                if (kvp.Key.Equals("Ice"))
+                {
+                    if (kvp.Value < ICE_THRESHOLD) ((IMyTextPanel)invPanel).FontColor = new Color(255, 0, 0);
+                    valueOut = (float)(Math.Round((double)kvp.Value, 0)) + " ";
+                }
+                Log("\n" + PadRight(kvp.Key + ": ", COLUMN_WIDTH) + PadLeft(valueOut, COLUMN_WIDTH/2),invPanel);
+            }
+
+            //END OF MAIN
         }
 
         float getItemAmountAsFloat(MyInventoryItem item)
