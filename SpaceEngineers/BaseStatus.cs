@@ -18,23 +18,23 @@ namespace SpaceEngineers
         //Assumes monospace font size 1
         const int COLUMN_WIDTH = 16;
 
-        const IDictionary<string, float> resourcesDict = new Dictionary<string, float>() {
-        //Show ice
-            {"Ice", 0.0f},
-            //Show ingots
-            { "Iron Ingot", 0.0f },
-            { "Nickel Ingot", 0.0f },
-            {"Silicon Wafer", 0.0f },
-            {"Cobalt Ingot", 0.0f },
-            {"Silver Ingot", 0.0f },
-            {"Gold Ingot", 0.0f },
-            {"Platinum Ingot", 0.0f },
-            {"Uranium Ingot", 0.0f },
-            {"Magnesium Pow", 0.0f }
-        };
-
         void Main()
         {
+    IDictionary<string, float> resourcesDict = new Dictionary<string, float>();
+
+            //Always show ingots
+            resourcesDict.Add("Cobalt Ingot", 0.0f);
+            resourcesDict.Add("Gold Ingot", 0.0f);
+            resourcesDict.Add("Iron Ingot", 0.0f);
+            resourcesDict.Add("Magnesium Pow", 0.0f);
+            resourcesDict.Add("Nickel Ingot", 0.0f);
+            resourcesDict.Add("Platinum Ingot", 0.0f);
+            resourcesDict.Add("Silicon Wafer", 0.0f);
+            resourcesDict.Add("Silver Ingot", 0.0f);
+            resourcesDict.Add("Uranium Ingot", 0.0f);
+            //Always show ice
+            resourcesDict.Add("Ice", 0.0f);
+
             string ERR_TXT = "";
 
             IMyTextPanel invPanel = null;
@@ -96,9 +96,9 @@ namespace SpaceEngineers
             }
 
             //get all containers with inventories
+            List<IMyTerminalBlock> inventoryBlocksOnGrid = new List<IMyTerminalBlock>();
             if (INV_PANEL_NAME.Length > 0)
             {
-                List<IMyTerminalBlock> inventoryBlocksOnGrid = new List<IMyTerminalBlock>();
                 GridTerminalSystem.GetBlocksOfType<IMyTerminalBlock>(inventoryBlocksOnGrid, filterInventories);
                 if (inventoryBlocksOnGrid.Count == 0)
                 {
@@ -137,10 +137,9 @@ namespace SpaceEngineers
             }
 
             //get all tanks
+            List<IMyTerminalBlock> tanksOnGrid = new List<IMyTerminalBlock>();
             if (TANK_PANEL_NAME.Length > 0)
             {
-
-                List<IMyTerminalBlock> tanksOnGrid = new List<IMyTerminalBlock>();
                 GridTerminalSystem.GetBlocksOfType<IMyGasTank>(tanksOnGrid, filterThis);
                 if (tanksOnGrid.Count == 0)
                 {
@@ -151,9 +150,9 @@ namespace SpaceEngineers
             }
 
             //Get all batteries
+            List<IMyTerminalBlock> batteriesOnGrid = new List<IMyTerminalBlock>();
             if (BATTERY_PANEL_NAME.Length > 0)
             {
-                List<IMyTerminalBlock> batteriesOnGrid = new List<IMyTerminalBlock>();
                 GridTerminalSystem.GetBlocksOfType<IMyBatteryBlock>(batteriesOnGrid, filterThis);
                 if (batteriesOnGrid.Count == 0)
                 {
@@ -173,13 +172,12 @@ namespace SpaceEngineers
 
             //display tanks
             float percent = 0.0f;
-            string outputText = "";
             // logic for tanks
             for (int i = 0; i < tanksOnGrid.Count; i++)
             {
                 percent = getExtraFieldFloat(tanksOnGrid[i], "Filled: (\\d+\\.?\\d*)%");
                 string nameOut = tanksOnGrid[i].CustomName;
-                Log("\n" + PadRight(nameOut + ": ", COLUMN_WIDTH) + percent + "%", tankPanel);
+                Log(PadRight(nameOut + ": ", COLUMN_WIDTH) + percent + "%", tankPanel);
             }
 
             //display batteries
@@ -225,7 +223,7 @@ namespace SpaceEngineers
                     if (kvp.Value < ICE_THRESHOLD) ((IMyTextPanel)invPanel).FontColor = new Color(255, 0, 0);
                     valueOut = (float)(Math.Round((double)kvp.Value, 0)) + " ";
                 }
-                Log("\n" + PadRight(kvp.Key + ": ", COLUMN_WIDTH) + PadLeft(valueOut, COLUMN_WIDTH/2),invPanel);
+                Log(PadRight(kvp.Key + ": ", COLUMN_WIDTH) + PadLeft(valueOut,8 ), invPanel);
             }
 
             //END OF MAIN
