@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using VRage.Game.ModAPI.Ingame;
+using VRage.Game.ModAPI.Interfaces;
 using VRageMath;
 
 namespace SpaceEngineers
@@ -16,7 +17,10 @@ namespace SpaceEngineers
         const string INV_PANEL_NAME = "LCD Panel Inv";
         const float ICE_THRESHOLD = 50000.0f;
         //Assumes monospace font size 1
+        //Wide LCDS are 48 (three column widths)
+        //regular are 25 (One column width, one column right)
         const int COLUMN_WIDTH = 16;
+        const int COLUMN_RIGHT = 9;
 
         void Main()
         {
@@ -52,52 +56,51 @@ namespace SpaceEngineers
             {
                 for (int i = 0; i < lcdPanelsOnGrid.Count; i++)
                 {
-                    switch (lcdPanelsOnGrid[i].CustomName)
+                    if (lcdPanelsOnGrid[i].CustomName == INV_PANEL_NAME)
                     {
-                        case INV_PANEL_NAME:
-                            invPanel = (IMyTextPanel)lcdPanelsOnGrid[i];
-                            //Reset color for ice alarm
-                            ((IMyTextPanel)invPanel).FontColor = new Color(255, 255, 255);
-                            Log("clear", invPanel);
-                            continue;
-                        case TANK_PANEL_NAME:
-                            tankPanel = (IMyTextPanel)lcdPanelsOnGrid[i];
-                            Log("clear", tankPanel);
-                            continue;
-                        case ENGINE_PANEL_NAME:
-                            enginePanel = (IMyTextPanel)lcdPanelsOnGrid[i];
-                            Log("clear", enginePanel);
-                            continue;
-                        case BATTERY_PANEL_NAME:
-                            batteryPanel = (IMyTextPanel)lcdPanelsOnGrid[i];
-                            Log("clear", batteryPanel);
-                            continue;
-                        default:
-                            continue;
+                        invPanel = (IMyTextPanel)lcdPanelsOnGrid[i];
+                        //Reset color for ice alarm
+                        ((IMyTextPanel)invPanel).FontColor = new Color(255, 255, 255);
+                        Log("clear", invPanel);
+                    }
+                    if (lcdPanelsOnGrid[i].CustomName == TANK_PANEL_NAME)
+                    {
+                        tankPanel = (IMyTextPanel)lcdPanelsOnGrid[i];
+                        Log("clear", tankPanel);
+                    }
+                    if (lcdPanelsOnGrid[i].CustomName == ENGINE_PANEL_NAME)
+                    {
+                        enginePanel = (IMyTextPanel)lcdPanelsOnGrid[i];
+                        Log("clear", enginePanel);
+                    }
+                    if (lcdPanelsOnGrid[i].CustomName == BATTERY_PANEL_NAME)
+                    {
+                        batteryPanel = (IMyTextPanel)lcdPanelsOnGrid[i];
+                        Log("clear", batteryPanel);
                     }
                 }
                 if (invPanel == null && INV_PANEL_NAME.Length > 0)
                 {
-                    ERR_TXT += "no LCD Panel block named " + INV_PANEL_NAME + " found\n";
+                    ERR_TXT += "no LCD named " + INV_PANEL_NAME + "\n";
                 }
 
                 if (tankPanel == null && TANK_PANEL_NAME.Length > 0)
                 {
-                    ERR_TXT += "no LCD Panel block named " + TANK_PANEL_NAME + " found\n";
+                    ERR_TXT += "no LCD named " + TANK_PANEL_NAME + "\n";
                 }
                 if (enginePanel == null && ENGINE_PANEL_NAME.Length > 0)
                 {
-                    ERR_TXT += "no LCD Panel block named " + ENGINE_PANEL_NAME + " found\n";
+                    ERR_TXT += "no LCD named " + ENGINE_PANEL_NAME + "\n";
                 }
                 if (batteryPanel == null && BATTERY_PANEL_NAME.Length > 0)
                 {
-                    ERR_TXT += "no LCD Panel block named " + BATTERY_PANEL_NAME + " found\n";
+                    ERR_TXT += "no LCD named " + BATTERY_PANEL_NAME + "\n";
                 }
             }
 
             //get all containers with inventories
             List<IMyTerminalBlock> inventoryBlocksOnGrid = new List<IMyTerminalBlock>();
-            if (INV_PANEL_NAME.Length > 0)
+            if (INV_PANEL_NAME.Length > 0 && invPanel != null)
             {
                 GridTerminalSystem.GetBlocksOfType<IMyTerminalBlock>(inventoryBlocksOnGrid, filterInventories);
                 if (inventoryBlocksOnGrid.Count == 0)
@@ -135,54 +138,73 @@ namespace SpaceEngineers
                 }
 
             }
+            else ERR_TXT += "inventories skipped\n";
 
             //get all tanks
             List<IMyTerminalBlock> tanksOnGrid = new List<IMyTerminalBlock>();
-            if (TANK_PANEL_NAME.Length > 0)
+            if (TANK_PANEL_NAME.Length > 0 && tankPanel != null)
             {
                 GridTerminalSystem.GetBlocksOfType<IMyGasTank>(tanksOnGrid, filterThis);
                 if (tanksOnGrid.Count == 0)
                 {
                     ERR_TXT += "no gas tank blocks found\n";
                 }
-                Echo(tanksOnGrid.Count + " tanks found");
                 tanksOnGrid.Sort(compareBlocksByCustomName);
             }
+            else ERR_TXT += "tanks skipped\n";
+
 
             //Get all batteries
             List<IMyTerminalBlock> batteriesOnGrid = new List<IMyTerminalBlock>();
-            if (BATTERY_PANEL_NAME.Length > 0)
+            if (BATTERY_PANEL_NAME.Length > 0 && batteryPanel != null)
             {
                 GridTerminalSystem.GetBlocksOfType<IMyBatteryBlock>(batteriesOnGrid, filterThis);
                 if (batteriesOnGrid.Count == 0)
                 {
                     ERR_TXT += "no battery blocks found\n";
                 }
+            }
+            else ERR_TXT += "batteries skipped\n";
 
-                // display errors
-                if (ERR_TXT != "")
+
+            //Get all Engines
+            List<IMyFunctionalBlock> enginesOnGrid = new List<IMyFunctionalBlock>();
+            if (ENGINE_PANEL_NAME.Length > 0 && enginePanel != null)
+            {
+                GridTerminalSystem.GetBlocksOfType<IMyFunctionalBlock>(enginesOnGrid, filterGenerators);
+                if(enginesOnGrid.Count == 0)
                 {
-                    Echo("Script Errors:\n" + ERR_TXT + "(make sure block ownership is set correctly)");
-                    if (invPanel == null && tankPanel == null && enginePanel == null && batteryPanel == null)
-                    {
-                        return;
-                    }
+                    ERR_TXT += "no engine blocks foind\n";
+                }
+            }
+            else ERR_TXT += "engines skipped\n";
+
+            // display collection errors
+            if (ERR_TXT != "")
+            {
+                Echo("Script Errors:\n" + ERR_TXT + "(double check block ownership)");
+                if (invPanel == null && tankPanel == null && enginePanel == null && batteryPanel == null)
+                {
+                    return;
                 }
             }
 
-            //Get all Engines
-            List<IMyTerminalBlock> enginesOnGrid = new List<IMyTerminalBlock>();
-            GridTerminalSystem.GetBlocksOfType<IMyReactor>(enginesOnGrid, filterThis);
-
             //display tanks
             float percent = 0.0f;
-            // logic for tanks
             for (int i = 0; i < tanksOnGrid.Count; i++)
             {
                 percent = getExtraFieldFloat(tanksOnGrid[i], "Filled: (\\d+\\.?\\d*)%");
                 string nameOut = tanksOnGrid[i].CustomName;
-                Log(PadRight(nameOut + ": ", COLUMN_WIDTH) + percent + "%", tankPanel);
+                Log(PadRight(nameOut + ": ", COLUMN_WIDTH) + PadLeft(percent + "%",COLUMN_RIGHT) , tankPanel);
             }
+
+            //display Engines
+            for (int i = 0; i < enginesOnGrid.Count; i++)
+            {
+                string onOff = enginesOnGrid[i].Enabled ? "On" : "Off";
+                Log(PadRight(enginesOnGrid[i].CustomName + ": ", COLUMN_WIDTH) + PadLeft(onOff, COLUMN_RIGHT), enginePanel);
+            }
+
 
 
             //display batteries
@@ -218,21 +240,24 @@ namespace SpaceEngineers
             }
 
             //display inventories
-            foreach (KeyValuePair<string, float> kvp in resourcesDict)
+            if (INV_PANEL_NAME.Length > 0 && invPanel != null)
             {
-                //if there is more than 5000, reduce to kilo-count
-                string valueOut = kvp.Value < 5000 ? (float)(Math.Round((double)kvp.Value, 0)) + " " : (float)(Math.Round((double)kvp.Value / 1000, 1)) + "k";
-                //Turn panel red for ice threshold
-                if (kvp.Key.Equals("Ice"))
+                foreach (KeyValuePair<string, float> kvp in resourcesDict)
                 {
-                    if (kvp.Value < ICE_THRESHOLD)
+                    //if there is more than 5000, reduce to kilo-count
+                    string valueOut = kvp.Value < 5000 ? (float)(Math.Round((double)kvp.Value, 0)) + " " : (float)(Math.Round((double)kvp.Value / 1000, 1)) + "k";
+                    //Turn panel red for ice threshold
+                    if (kvp.Key.Equals("Ice"))
                     {
-                        ((IMyTextPanel)invPanel).FontColor = new Color(255, 0, 0);
-                    }
+                        if (kvp.Value < ICE_THRESHOLD)
+                        {
+                            ((IMyTextPanel)invPanel).FontColor = new Color(255, 0, 0);
+                        }
 
-                    valueOut = (float)(Math.Round((double)kvp.Value, 0)) + " ";
+                        valueOut = (float)(Math.Round((double)kvp.Value, 0)) + " ";
+                    }
+                    Log(PadRight(kvp.Key + ": ", COLUMN_WIDTH) + PadLeft(valueOut, COLUMN_RIGHT), invPanel);
                 }
-                Log(PadRight(kvp.Key + ": ", COLUMN_WIDTH) + PadLeft(valueOut, 8), invPanel);
             }
 
             //END OF MAIN
@@ -294,7 +319,13 @@ namespace SpaceEngineers
             return block.CubeGrid == Me.CubeGrid;
         }
 
-        bool filterInventories(IMyTerminalBlock block)
+        bool filterGenerators(IMyTerminalBlock block)
+        {
+            string type = getDetailedInfoValue(block, "Type");
+            return filterThis(block) && (type.EndsWith("Engine") || type.EndsWith("Reactor"));
+        }
+
+            bool filterInventories(IMyTerminalBlock block)
         {
             if (block.CubeGrid != Me.CubeGrid || !block.HasInventory)
             {
