@@ -20,7 +20,7 @@ namespace SpaceEngineers
 
         void Main()
         {
-    IDictionary<string, float> resourcesDict = new Dictionary<string, float>();
+            IDictionary<string, float> resourcesDict = new Dictionary<string, float>();
 
             //Always show ingots
             resourcesDict.Add("Cobalt Ingot", 0.0f);
@@ -170,6 +170,10 @@ namespace SpaceEngineers
                 }
             }
 
+            //Get all Engines
+            List<IMyTerminalBlock> enginesOnGrid = new List<IMyTerminalBlock>();
+            GridTerminalSystem.GetBlocksOfType<IMyReactor>(enginesOnGrid, filterThis);
+
             //display tanks
             float percent = 0.0f;
             // logic for tanks
@@ -179,6 +183,7 @@ namespace SpaceEngineers
                 string nameOut = tanksOnGrid[i].CustomName;
                 Log(PadRight(nameOut + ": ", COLUMN_WIDTH) + percent + "%", tankPanel);
             }
+
 
             //display batteries
             string header = PadRight("Name", COLUMN_WIDTH) + PadRight("Charge", COLUMN_WIDTH) + "Status";
@@ -220,10 +225,14 @@ namespace SpaceEngineers
                 //Turn panel red for ice threshold
                 if (kvp.Key.Equals("Ice"))
                 {
-                    if (kvp.Value < ICE_THRESHOLD) ((IMyTextPanel)invPanel).FontColor = new Color(255, 0, 0);
+                    if (kvp.Value < ICE_THRESHOLD)
+                    {
+                        ((IMyTextPanel)invPanel).FontColor = new Color(255, 0, 0);
+                    }
+
                     valueOut = (float)(Math.Round((double)kvp.Value, 0)) + " ";
                 }
-                Log(PadRight(kvp.Key + ": ", COLUMN_WIDTH) + PadLeft(valueOut,8 ), invPanel);
+                Log(PadRight(kvp.Key + ": ", COLUMN_WIDTH) + PadLeft(valueOut, 8), invPanel);
             }
 
             //END OF MAIN
