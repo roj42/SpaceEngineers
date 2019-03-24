@@ -18,15 +18,6 @@ namespace SpaceEngineers
         {
             string ERR_TXT = "";
 
-            //Try to parse the input
-            if (!String.IsNullOrEmpty(argument))
-            {
-                int parseArg = 0;
-                int.TryParse("" + argument, out parseArg);
-                VOLUME_THRESHOLD = parseArg;
-            }
-            Echo("Threshold: " + VOLUME_THRESHOLD);
-
             MyFixedPoint currentVolume = new MyFixedPoint();
             MyFixedPoint maxVolume = new MyFixedPoint();
 
@@ -67,14 +58,13 @@ namespace SpaceEngineers
                 List<IMyInventory> inventories = new List<IMyInventory>();
                 for (int i = 0; i < inventoryBlocksOnGrid.Count; i++)
                 {
-                    List<MyInventoryItem> items = new List<MyInventoryItem>();
                     inventories.Add(inventoryBlocksOnGrid[i].GetInventory(0));
                     if (inventoryBlocksOnGrid[i].InventoryCount == 2)
                     {
                         inventories.Add(inventoryBlocksOnGrid[i].GetInventory(1));
                     }
                 }
-                //Echo(inventories.Count + " inventories with items in them");
+                Echo(inventories.Count + " inventories found");
 
                 //Measure Volumes
                 for (int i = 0; i < inventories.Count; i++)
@@ -84,16 +74,32 @@ namespace SpaceEngineers
                 }
                 Echo("Current Volume: " + currentVolume.ToString());
                 Echo("Maximum Volume: " + maxVolume.ToString());
-                //no max volume set. Use 90% as default
+
+                //Try to parse the input
+                int parseArg = 0;
+                int.TryParse("" + argument, out parseArg);
+                if (parseArg == 0)
+                {
+                    Echo("Argument must be an integer. Using default.");
+                }
+                VOLUME_THRESHOLD = parseArg;
+
+                if (VOLUME_THRESHOLD > maxVolume)
+                {
+                    VOLUME_THRESHOLD = maxVolume;
+                }
+                //if no max volume set. Use 95% as default
                 if (VOLUME_THRESHOLD.Equals(MyFixedPoint.Zero))
                 {
-                    VOLUME_THRESHOLD = MyFixedPoint.MultiplySafe(.9f, maxVolume);
+                    VOLUME_THRESHOLD = MyFixedPoint.MultiplySafe(.95f, maxVolume);
                     Echo("Setting threshold to: " + VOLUME_THRESHOLD);
 
                 }
+                Echo("Threshold: " + VOLUME_THRESHOLD);
+
 
             }
-            else ERR_TXT += "inventories skipped\n";
+            else ERR_TXT += "No light, inventories skipped\n";
 
 
             // display collection errors
@@ -141,23 +147,6 @@ namespace SpaceEngineers
                 )
             {
                 return false;
-            }
-            else
-            {
-                List<MyInventoryItem> items = new List<MyInventoryItem>();
-                int allItemsCount = 0;
-                block.GetInventory(0).GetItems(items);
-                allItemsCount += items.Count;
-                if (block.InventoryCount == 2)
-                {
-                    List<MyInventoryItem> items2 = new List<MyInventoryItem>();
-                    block.GetInventory(1).GetItems(items2);
-                    allItemsCount += items2.Count;
-                }
-                if (allItemsCount == 0)
-                {
-                    return false;
-                }
             }
             return true;
         }
