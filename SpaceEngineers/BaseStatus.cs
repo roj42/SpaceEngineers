@@ -27,14 +27,14 @@ namespace SpaceEngineers
             IDictionary<string, float> resourcesDict = new Dictionary<string, float>();
 
             //Always show ingots
-            resourcesDict.Add("Cobalt Ingot", 0.0f);
-            resourcesDict.Add("Gold Ingot", 0.0f);
             resourcesDict.Add("Iron Ingot", 0.0f);
-            resourcesDict.Add("Magnesium Pow", 0.0f);
-            resourcesDict.Add("Nickel Ingot", 0.0f);
-            resourcesDict.Add("Platinum Ingot", 0.0f);
             resourcesDict.Add("Silicon Wafer", 0.0f);
+            resourcesDict.Add("Nickel Ingot", 0.0f);
+            resourcesDict.Add("Cobalt Ingot", 0.0f);
             resourcesDict.Add("Silver Ingot", 0.0f);
+            resourcesDict.Add("Gold Ingot", 0.0f);
+            resourcesDict.Add("Platinum Ingot", 0.0f);
+            resourcesDict.Add("Magnesium Pow", 0.0f);
             resourcesDict.Add("Uranium Ingot", 0.0f);
             //Always show ice
             resourcesDict.Add("Ice", 0.0f);
