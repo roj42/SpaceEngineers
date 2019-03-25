@@ -139,11 +139,11 @@ namespace SpaceEngineers
         bool filterInventories(IMyTerminalBlock block)
         {
             string type = getDetailedInfoValue(block, "Type");
-
             if (block.CubeGrid != Me.CubeGrid || !block.HasInventory
                 || type.EndsWith("Engine") 
                 || type.EndsWith("Reactor")
                 || type.EndsWith("Generator")
+                || type.EndsWith("Tank")  
                 )
             {
                 return false;
