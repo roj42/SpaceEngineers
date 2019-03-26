@@ -741,7 +741,7 @@ bool GetProjectorData()
     //Get the blocks list from the projo detailed infos
     string[] strDetailedInfo = (projo as IMyTerminalBlock).DetailedInfo.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None);
     blocks = new List<string>(strDetailedInfo);
-    if(projo.RemainingBlocks==0 && projo.IsWorking)
+    if(projo.RemainingBlocks==0 && projo.IsProjecting)
     {
         boolProjectionComplete = true;
         return false;
@@ -1259,7 +1259,7 @@ public class ClapYoFace
                 }
                 else // assume default font, covers Debug,Red,Green,Blue,White,DarkBlue,UrlNormal,UrlHighlight,ErrorMessageBoxCaption,ErrorMessageBoxText,InfoMessageBoxCaption,InfoMessageBoxText,ScreenCaption,GameCredits,LoadingScreen,BuildInfo,BuildInfoHighlight
                 {
-                    strFontType="Debug";
+                    strFontType="Default";
                     intDisplayWidth=93;
                     intInitialDisplayWidth=intDisplayWidth;
                     intLinesPerScreen=17;
@@ -1310,7 +1310,7 @@ public class ClapYoFace
     //========================================================================//
     void CreateFontSizeDictionary(string FontType)
     {
-        if(FontType=="Debug") // only have one font for now
+        if(FontType=="Default") // only have one font for now
         {
             FontCharSize.Clear();
             FontSizeAddCharToDictionary("\n",0f);
