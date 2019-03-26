@@ -110,7 +110,6 @@ namespace SpaceEngineers
                 List<IMyInventory> inventories = new List<IMyInventory>();
                 for (int i = 0; i < inventoryBlocksOnGrid.Count; i++)
                 {
-                    List<MyInventoryItem> items = new List<MyInventoryItem>();
                     inventories.Add(inventoryBlocksOnGrid[i].GetInventory(0));
                     if (inventoryBlocksOnGrid[i].InventoryCount == 2)
                     {
