@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using Sandbox.ModAPI.Interfaces;
 using System;
 using System.Collections.Generic;
 using VRage;
@@ -58,6 +59,7 @@ namespace SpaceEngineers
                 List<IMyInventory> inventories = new List<IMyInventory>();
                 for (int i = 0; i < inventoryBlocksOnGrid.Count; i++)
                 {
+                    Echo("Adding inventory of " + inventoryBlocksOnGrid[i].CustomName);
                     inventories.Add(inventoryBlocksOnGrid[i].GetInventory(0));
                     if (inventoryBlocksOnGrid[i].InventoryCount == 2)
                     {
@@ -138,12 +140,25 @@ namespace SpaceEngineers
 
         bool filterInventories(IMyTerminalBlock block)
         {
+
+            if (block.CustomName.Contains("Cockpit")){
+                List<ITerminalAction> actions = new List<ITerminalAction>();
+                ITerminalAction action = block.GetActionWithName("Main Cockpit On/Off");
+               if(action!=null)
+                Echo("action"+ action.Name.ToString());
+                foreach (ITerminalAction act in actions)
+                {
+
+                    Echo("Cockpit: " + act.Name);
+                }
+            }
             string type = getDetailedInfoValue(block, "Type");
             if (block.CubeGrid != Me.CubeGrid || !block.HasInventory
-                || type.EndsWith("Engine") 
+                || type.EndsWith("Engine")
                 || type.EndsWith("Reactor")
                 || type.EndsWith("Generator")
-                || type.EndsWith("Tank")  
+                || type.EndsWith("Tank")
+                || block.GetActionWithName("MainCockpit") != null
                 )
             {
                 return false;
