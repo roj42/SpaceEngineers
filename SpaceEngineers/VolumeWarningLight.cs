@@ -12,8 +12,9 @@ namespace SpaceEngineers
     {
 
         const string IND_LIGHT_NAME = "Volume";
+        private readonly bool debug = false;
         Color WARNING_COLOR = new Color(255, 0, 0);
-        MyFixedPoint VOLUME_THRESHOLD = MyFixedPoint.Zero;
+        MyFixedPoint VOLUME_THRESHOLD;
 
         void Main(string argument)
         {
@@ -59,32 +60,37 @@ namespace SpaceEngineers
                 List<IMyInventory> inventories = new List<IMyInventory>();
                 for (int i = 0; i < inventoryBlocksOnGrid.Count; i++)
                 {
-                    Echo("Adding inventory of " + inventoryBlocksOnGrid[i].CustomName);
+                    if (debug) Echo("Adding " + inventoryBlocksOnGrid[i].InventoryCount + " inventory space(s) of " + inventoryBlocksOnGrid[i].CustomName);
                     inventories.Add(inventoryBlocksOnGrid[i].GetInventory(0));
-                    if (inventoryBlocksOnGrid[i].InventoryCount == 2)
-                    {
-                        inventories.Add(inventoryBlocksOnGrid[i].GetInventory(1));
+
+                    for (int j = 0; j < inventoryBlocksOnGrid[i].InventoryCount; j++) {
+                        IMyInventory inventory = inventoryBlocksOnGrid[i].GetInventory(j);
+                        if (debug) Echo("Inventory " + j + ": " + inventory.CurrentVolume + "/" + inventory.MaxVolume);
+                        currentVolume += inventory.CurrentVolume;
+                        maxVolume += inventory.MaxVolume;
+
                     }
                 }
-                Echo(inventories.Count + " inventories found");
+                Echo(inventories.Count + " inventories tallied");
 
                 //Measure Volumes
                 for (int i = 0; i < inventories.Count; i++)
                 {
-                    currentVolume += inventories[i].CurrentVolume;
-                    maxVolume += inventories[i].MaxVolume;
                 }
                 Echo("Current Volume: " + currentVolume.ToString());
                 Echo("Maximum Volume: " + maxVolume.ToString());
 
                 //Try to parse the input
-                int parseArg = 0;
-                int.TryParse("" + argument, out parseArg);
-                if (parseArg == 0)
+                if (!String.IsNullOrEmpty(argument))
                 {
-                    Echo("Argument must be an integer. Using default.");
+                    int parseArg = 0;
+                    int.TryParse("" + argument, out parseArg);
+                    if (parseArg == 0)
+                    {
+                        Echo("Argument must be an integer. Using default.");
+                    }
+                    VOLUME_THRESHOLD = parseArg;
                 }
-                VOLUME_THRESHOLD = parseArg;
 
                 if (VOLUME_THRESHOLD > maxVolume)
                 {
@@ -140,18 +146,8 @@ namespace SpaceEngineers
 
         bool filterInventories(IMyTerminalBlock block)
         {
-
-            if (block.CustomName.Contains("Cockpit")){
-                List<ITerminalAction> actions = new List<ITerminalAction>();
-                ITerminalAction action = block.GetActionWithName("Main Cockpit On/Off");
-               if(action!=null)
-                Echo("action"+ action.Name.ToString());
-                foreach (ITerminalAction act in actions)
-                {
-
-                    Echo("Cockpit: " + act.Name);
-                }
-            }
+            //Skip reactors, generators, engines, and tanks, all of which have inventories that cannot hold ore
+            //Skip cockpits, as the conveyor system does not push to cockpits
             string type = getDetailedInfoValue(block, "Type");
             if (block.CubeGrid != Me.CubeGrid || !block.HasInventory
                 || type.EndsWith("Engine")
