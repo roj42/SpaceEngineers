@@ -28,8 +28,8 @@ namespace SpaceEngineers
 
             //get one LCD panel
             List<IMyTerminalBlock> l1 = new List<IMyTerminalBlock>();
-            IMyTextPanel v1 = null;
-            GridTerminalSystem.GetBlocksOfType<IMyTextPanel>(l1, filterThis);
+            IMyTextSurface v1 = null;
+            GridTerminalSystem.GetBlocksOfType<IMyTextSurface>(l1, filterThis);
             if (l1.Count == 0)
             {
                 ERR_TXT += "no LCD Panel blocks found\n";
@@ -40,8 +40,8 @@ namespace SpaceEngineers
                 {
                     if (l1[i].CustomName.Contains(PANEL_NAME))
                     {
-                        v1 = (IMyTextPanel)l1[i];
-                        ((IMyTextPanel)v1).FontColor = new Color(255, 255, 255);
+                        v1 = (IMyTextSurface)l1[i];
+                        ((IMyTextSurface)v1).FontColor = new Color(255, 255, 255);
 
                         break;
                     }
@@ -128,15 +128,13 @@ namespace SpaceEngineers
                 string valueOut = kvp.Value < 5000 ? (float)(Math.Round((double)kvp.Value, 0)) + " " : (float)(Math.Round((double)kvp.Value / 1000, 0)) + "k";
                 if (kvp.Key.Equals("Ice"))
                 {
-                    if (kvp.Value < ICE_THRESHOLD) ((IMyTextPanel)v1).FontColor = new Color(255, 0, 0);
+                    if (kvp.Value < ICE_THRESHOLD) ((IMyTextSurface)v1).FontColor = new Color(255, 0, 0);
                     valueOut = (float)(Math.Round((double)kvp.Value, 0)) + " ";
                 }
                 outputText += "\n" + PadRight(kvp.Key + ": ", COLUMN_WIDTH) + PadLeft(valueOut, 8);
             }
-
-
-            ((IMyTextPanel)v1).WritePublicText(outputText, false);
-            ((IMyTextPanel)v1).ShowPublicTextOnScreen();
+            ((IMyTextSurface)v1).ContentType = VRage.Game.GUI.TextPanel.ContentType.TEXT_AND_IMAGE;
+            ((IMyTextSurface)v1).WriteText(outputText, false);
 
         }
 
