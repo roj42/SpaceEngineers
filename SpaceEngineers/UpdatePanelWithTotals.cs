@@ -10,6 +10,12 @@ namespace SpaceEngineers
 
     {
 
+        //public Program()
+        //{
+        //  // Configure this program to run the Main method every 100 update ticks
+        //  Runtime.UpdateFrequency = UpdateFrequency.Update100;
+        //}
+
         //Assumes monospace font size 1
         const int COLUMN_WIDTH = 16;
         const string PANEL_NAME = "Ore Panel";
@@ -19,8 +25,9 @@ namespace SpaceEngineers
             string ERR_TXT = "";
 
             //get all tanks
-            List<IMyTerminalBlock> v0 = new List<IMyTerminalBlock>();
-            GridTerminalSystem.GetBlocksOfType<IMyGasTank>(v0, filterThis);
+            List<IMyTerminalBlock> tempTanks = new List<IMyTerminalBlock>();
+            GridTerminalSystem.GetBlocksOfType<IMyGasTank>(tempTanks, filterThis);
+            List<IMyTerminalBlock> v0 = tempTanks.FindAll(t => !t.CustomName.Contains("%"));
             if (v0.Count == 0)
             {
                 ERR_TXT += "no Hydrogen Tank blocks found\n";
@@ -73,7 +80,6 @@ namespace SpaceEngineers
             if (ERR_TXT != "")
             {
                 Echo("Script Errors:\n" + ERR_TXT + "(make sure block ownership is set correctly)");
-                return;
             }
             else { Echo(""); }
 
